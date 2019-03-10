@@ -22,7 +22,7 @@ mongoose.connect('mongodb://127.0.0.1/typings');
 const User = mongoose.model('users', { name: String , email: String, password: String});
 
 
-const UserScore = mongoose.model('user_scores', {name: String, scores: Array })
+const UserScore = mongoose.model('user_scores', {name: String, letterU: Array, letterR: Array, letterI: Array, letterE: Array })
 
 
 
@@ -117,7 +117,46 @@ app.post('/login', (req,res) => {
 
 });
 
+app.post('/eresults', (req,res) =>{
+    var decoded = jwt.verify(req.body.token, secretToken);
+    console.log(req.body.score);
+     User.findOne({email: decoded.user}, function(err, data){
+        if(err){
+            console.log(err);
 
+        }
+
+         new UserScore({
+            name: data.name,
+            letterE: req.body.score
+        })
+        .save((err, ans) => {
+            if(err){
+                console.log(err);
+
+            }
+           console.log(`return from the save ${ans}`);
+            res.send({data: ans})
+
+
+
+        })
+
+        //console.log(letter_e_obj.letterE.length);
+        
+       
+
+
+    //
+    //console.log(`return from the user var ${user.scores.length}`)
+
+   
+ 
+
+
+})//user var
+
+})
 
 
 //server running on port 4000
