@@ -48,8 +48,10 @@ app.get('/dashboard', (req,res) => {
         
         res.send({data: req.headers.token })
     }
-
+else{
     res.send({msg: 'You dont have access to this page'})
+}
+    
     
 })
 
@@ -87,7 +89,7 @@ app.post('/register', (req,res) => {
 app.post('/login', (req,res) => {
     User.findOne({email: req.body.email}, (err, person) => {
         if(err){ res.send({msg: 'Are you sure you have an account ?'})}
-        bcrypt.compare(req.body.password,person.password , function(err, data){
+        bcrypt.compare(req.body.password.person.password , function(err, data){
            if(err){ console.log(err)}
            if(data){
                
