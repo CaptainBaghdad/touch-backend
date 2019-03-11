@@ -22,7 +22,7 @@ mongoose.connect('mongodb://127.0.0.1/typings');
 const User = mongoose.model('users', { name: String , email: String, password: String});
 
 
-const UserScore = mongoose.model('user_scores', {name: String, letterU: Array, letterR: Array, letterI: Array, letterE: Array })
+const UserScore = mongoose.model('user_scores', {name: String, letterU: Number, letterR:Number, letterI: Number, letterE: Number })
 
 
 
@@ -64,19 +64,7 @@ app.post('/register', (req,res) => {
     bcrypt.hash(password, saltRounds, function(err, hash) {
         // Store hash in your password DB.
 
-        /*const FULLUser = new User({
-            name: String,
-            email:String,
-            password: String,
-            profileURL: String,
-            test: String,
-            scores: Array,
-            average: Number,
-            level: String,
-            RankId: Number
-
-        })*/
-            
+       
             let user = new User({
             name: name,
             email:email,
@@ -117,7 +105,7 @@ app.post('/login', (req,res) => {
 
 });
 
-app.post('/eresults', (req,res) =>{
+app.post('/uresults', (req,res) =>{
     var decoded = jwt.verify(req.body.token, secretToken);
     console.log(req.body.score);
      User.findOne({email: decoded.user}, function(err, data){
@@ -128,7 +116,7 @@ app.post('/eresults', (req,res) =>{
 
          new UserScore({
             name: data.name,
-            letterE: req.body.score
+            letterU: req.body.score
         })
         .save((err, ans) => {
             if(err){
@@ -156,6 +144,66 @@ app.post('/eresults', (req,res) =>{
 
 })//user var
 
+})
+
+app.post('/rresults', (req,res) => {
+    var decoded = jwt.verify(req.body.token, secretToken);
+    if(decoded){
+        User.findOne({email: decoded.user}, function(err, data){
+            if(err){
+                console.log(err)
+
+            }
+
+            if(!data){
+                    console.log(`there was no data to be returned`)
+
+
+            }
+
+            UserScore.findOne({name: data.name}, function(err,ans){
+                if(err){
+                    console.log(err);
+                }
+                if(!ans){
+                    console.log(`this is from the no ans. Creating a new user`);
+                   new UserScore({
+                       name: data.name,
+                      letterR: req.body.score
+                   }).save((err, obj) => {
+                       if(err){ console.log(err);}
+                       //console.log(`Return from the save ${obj.}`);
+                       res.send({obj:obj})
+
+                   })
+                }
+
+                
+                    
+                    UserScore.findOne({name: ans.name}, function(err, score){
+                        if(err){ console.log(err)}
+                        score.letterR = req.body.score;
+                        console.log(`this is the else statement ${score}`);
+                        res.send({score:score})
+                    })
+                    
+                   
+               
+               
+            
+
+               
+            })
+               
+      
+           
+
+        })
+
+        
+    }
+   // console.log(`this is the response from the server for the letter R ${req.body.score}`);
+   
 })
 
 
