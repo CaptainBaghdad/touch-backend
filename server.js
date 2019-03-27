@@ -3,6 +3,7 @@ let mongoose = require('mongoose');
 let bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 let cors = require('cors');
+//let mon = require('nodemon');
 let jwt = require('jsonwebtoken');
 let multer = require('multer');
 let secretToken = 'yba(youbeetaask)';
@@ -41,18 +42,85 @@ app.get('/', function(req,res){
 
 });
 
+app.get('/letteru', function(req,res){
+    
+
+});
+
 app.get('/dashboard', (req,res) => {
+    let avg = 0;
+    let arr = [];
+    let bool = true;
     if(req.headers.token){
         
         var decoded = jwt.verify(req.headers.token, secretToken);
         console.log(`this is the Name localStorage ${req.headers.name} and this is the decoded jwt ${decoded.name}`)
         UserScore.findOne({name: decoded.name}, function(err, found){
+            
+            //console.log(`the FOUND OBJ : ${Object.values(found.toObject())}`);
+            
+            
             if(err){
                 console.log(err);
 
             }
-            //console.log(`Should be another YO >> ${found.name}`)
-            res.send({data: found})
+
+
+            if(!found){
+               bool = false;
+               console.log(`This is why you're not getting a response`)
+
+            }
+            
+            
+
+           
+           
+           
+           //arr.push(found.letterE,found.letterI,found.letterR,found.letterU);
+           //let numOfLetters = arr.toString().replace(/\D/g,"").split().length;
+           //arr = arr.toString().replace(/,/g, "").split(",");
+           //console.log(`numofLetters var : ${numOfLetters} and the type of ${typeof(numOfLetters)}`);
+           else{
+           let obj = found.toObject();
+           
+            for(let i in obj){
+                if(typeof(obj[i]) == 'number' && obj[i] > 0 ){
+                    console.log(`this is the I value ${typeof(obj[i])}`);
+                    arr.push(obj[i]);
+
+                }
+               
+            }
+
+        }
+           
+           
+           console.log(`this is the array value ${arr}`);
+           if(arr.length == 1){
+               //numOfLetters = arr.
+               avg = arr[0];
+              // res.send({data:found, avg: avg})
+               
+               
+
+           }
+
+          
+           else{
+           // console.log(`this is the array : ${arr}`);
+            let ans = arr.reduce((prev,curr) => prev + curr, 0);
+            //console.log(`this is the ans value ${ans}`);
+           // console.log(`numofLetters var : ${numOfLetters}`);
+            avg  = ans / arr.length;
+
+            //console.log(`this is the average ${avg}`);
+           // console.log(`This is the found name : ${found.toObject().name}`);
+            res.send({data: found, avg: avg, bool:bool})
+
+           }
+           
+            
 
         });
         //User.findOne({email: req.headers.token.})
