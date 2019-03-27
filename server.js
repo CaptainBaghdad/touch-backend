@@ -3,6 +3,7 @@ let mongoose = require('mongoose');
 let bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 let cors = require('cors');
+//let mon = require('nodemon');
 let jwt = require('jsonwebtoken');
 let multer = require('multer');
 let secretToken = 'yba(youbeetaask)';
@@ -41,15 +42,93 @@ app.get('/', function(req,res){
 
 });
 
+app.get('/letteru', function(req,res){
+    
+
+});
+
 app.get('/dashboard', (req,res) => {
+    let avg = 0;
+    let arr = [];
+    let bool = true;
     if(req.headers.token){
-        console.log(`this is the DASHBOARD TOKEN ${req.headers.token}`)
+        
+        var decoded = jwt.verify(req.headers.token, secretToken);
+        console.log(`this is the Name localStorage ${req.headers.name} and this is the decoded jwt ${decoded.name}`)
+        UserScore.findOne({name: decoded.name}, function(err, found){
+            
+            //console.log(`the FOUND OBJ : ${Object.values(found.toObject())}`);
+            
+            
+            if(err){
+                console.log(err);
+
+            }
+
+
+            if(!found){
+               bool = false;
+               console.log(`This is why you're not getting a response`)
+
+            }
+            
+            
+
+           
+           
+           
+           //arr.push(found.letterE,found.letterI,found.letterR,found.letterU);
+           //let numOfLetters = arr.toString().replace(/\D/g,"").split().length;
+           //arr = arr.toString().replace(/,/g, "").split(",");
+           //console.log(`numofLetters var : ${numOfLetters} and the type of ${typeof(numOfLetters)}`);
+           else{
+           let obj = found.toObject();
+           
+            for(let i in obj){
+                if(typeof(obj[i]) == 'number' && obj[i] > 0 ){
+                    console.log(`this is the I value ${typeof(obj[i])}`);
+                    arr.push(obj[i]);
+
+                }
+               
+            }
+
+        }
+           
+           
+           console.log(`this is the array value ${arr}`);
+           if(arr.length == 1){
+               //numOfLetters = arr.
+               avg = arr[0];
+              // res.send({data:found, avg: avg})
+               
+               
+
+           }
+
+          
+           else{
+           // console.log(`this is the array : ${arr}`);
+            let ans = arr.reduce((prev,curr) => prev + curr, 0);
+            //console.log(`this is the ans value ${ans}`);
+           // console.log(`numofLetters var : ${numOfLetters}`);
+            avg  = ans / arr.length;
+
+            //console.log(`this is the average ${avg}`);
+           // console.log(`This is the found name : ${found.toObject().name}`);
+            res.send({data: found, avg: avg, bool:bool})
+
+           }
+           
+            
+
+        });
         //User.findOne({email: req.headers.token.})
         
-        res.send({data: req.headers.token })
+        //res.send({data:  })
     }
 
-    res.send({msg: 'You dont have access to this page'})
+    
     
 })
 
@@ -75,7 +154,7 @@ app.post('/register', (req,res) => {
 
             }
 
-        console.log(data)
+        console.log(`Success form the server ${data}`)
         res.send({data:data})
     })
 
@@ -86,15 +165,15 @@ app.post('/register', (req,res) => {
 
 app.post('/login', (req,res) => {
     User.findOne({email: req.body.email}, (err, person) => {
-        if(err){ res.send({msg: 'Are you sure you have an account ?'})}
-        bcrypt.compare(req.body.password,person.password , function(err, data){
+        if(err){ console.log(err)}
+        bcrypt.compare(req.body.password, person.password , function(err, data){
            if(err){ console.log(err)}
-           if(data){
+           
                
-            var token = jwt.sign({user: person.email}, secretToken);
+            var token = jwt.sign({user: person.email, name: person.name}, secretToken);
             res.send({data: person, token:token})
-            console.log(`DATA TOKEN ${token}`)
-           }
+            console.log(`DATA  ${person.name}`)
+           
 
 
         })
@@ -106,103 +185,152 @@ app.post('/login', (req,res) => {
 });
 
 app.post('/uresults', (req,res) =>{
+    console.log(`this is the req body score : ${req.body.score}`);
     var decoded = jwt.verify(req.body.token, secretToken);
-    console.log(req.body.score);
-     User.findOne({email: decoded.user}, function(err, data){
+    console.log(`this is the decoded ${decoded.name}`);
+
+    UserScore.findOneAndUpdate({name: decoded.name}, {$set:{letterU: req.body.score}}, function(err, found){
         if(err){
-            console.log(err);
+            console.log(`This is the error form the uresults UserScore findOne ${err}`);
 
         }
 
-         new UserScore({
-            name: data.name,
-            letterU: req.body.score
-        })
-        .save((err, ans) => {
-            if(err){
-                console.log(err);
+        if(!found){
+            new UserScore({
+                name: decoded.name,
+                letterU: req.body.score
 
-            }
-           console.log(`return from the save ${ans}`);
-            res.send({data: ans})
+            }).save((err, newUserScore) => {
+                if(err){
+                    console.log(`this is the error from the new UserScore Model for the letterU ${err}`);
 
+                }
+                console.log(`this is the response from the letterU  SAVE ${newUserScore}`);
+            })
 
-
-        })
-
-        //console.log(letter_e_obj.letterE.length);
+        }
+        //console.log(`Found UserScore Model : ${found.name}`)
         
-       
+
+    })
 
 
-    //
-    //console.log(`return from the user var ${user.scores.length}`)
-
-   
- 
-
-
-})//user var
 
 })
 
 app.post('/rresults', (req,res) => {
+    console.log(`this is the req body score : ${req.body.score}`);
     var decoded = jwt.verify(req.body.token, secretToken);
-    if(decoded){
-        User.findOne({email: decoded.user}, function(err, data){
-            if(err){
-                console.log(err)
+    console.log(`this is the decoded ${decoded.name}`);
 
-            }
+    UserScore.findOneAndUpdate({name: decoded.name}, {$set:{letterR: req.body.score}}, function(err, found){
+        if(err){
+            console.log(`This is the error form the rresults UserScore findOne ${err}`);
 
-            if(!data){
-                    console.log(`there was no data to be returned`)
+        }
 
+        if(!found){
+            new UserScore({
+                name: decoded.name,
+                letterR: req.body.score
 
-            }
-
-            UserScore.findOne({name: data.name}, function(err,ans){
-                if(err){
-                    console.log(err);
-                }
-                if(!ans){
-                    console.log(`this is from the no ans. Creating a new user`);
-                   new UserScore({
-                       name: data.name,
-                      letterR: req.body.score
-                   }).save((err, obj) => {
-                       if(err){ console.log(err);}
-                       //console.log(`Return from the save ${obj.}`);
-                       res.send({obj:obj})
-
-                   })
-                }
-
-                
-                    
-                    UserScore.findOne({name: ans.name}, function(err, score){
-                        if(err){ console.log(err)}
-                        score.letterR = req.body.score;
-                        console.log(`this is the else statement ${score}`);
-                        res.send({score:score})
-                    })
-                    
-                   
-               
-               
-            
-
-               
             })
-               
-      
-           
+            .save((err, newUserScore)=>{
+                if(err){
+                    console.log(`This is the err from the letterR ${err}`);
+                }
 
-        })
+                console.log(`This is the save from the findOneAndUpdate ${newUserScore} `);
 
+            })
+        }
+        console.log(`Found UserScore Model : ${found.name}`)
         
-    }
+
+    })
+    /*new UserScore({
+        name: decoded.name,
+        letterR: req.body.score
+
+    }).save((err,newUserScoreModel) => {
+        if(err) {console.log(err)}
+        console.log(`This is the user score model ${newUserScoreModel}`);
+        res.send()
+    })*/
+    
    // console.log(`this is the response from the server for the letter R ${req.body.score}`);
+   
+})
+
+
+
+app.post('/eresults', (req,res) => {
+    console.log(`this is the req body score : ${req.body.score}`);
+    var decoded = jwt.verify(req.body.token, secretToken);
+    console.log(`this is the decoded ${decoded.name}`);
+
+    UserScore.findOneAndUpdate({name: decoded.name}, {$set:{letterE: req.body.score}}, function(err, found){
+        if(err){
+            console.log(`This is the error form the rresults UserScore findOne ${err}`);
+
+        }
+
+        if(!found){
+            new UserScore({
+                name: decoded.name,
+                letterE: req.body.score
+
+            })
+            .save((err, newUserScore)=>{
+                if(err){
+                    console.log(`This is the err from the letterE ${err}`);
+                }
+
+                console.log(`This is the save from the findOneAndUpdate ${newUserScore} `);
+
+            })
+        }
+        console.log(`Found UserScore Model : ${found.name}`)
+        
+
+    })
+    
+   
+})
+
+
+
+app.post('/iresults', (req,res) => {
+    console.log(`this is the req body score : ${req.body.score}`);
+    var decoded = jwt.verify(req.body.token, secretToken);
+    console.log(`this is the decoded ${decoded.name}`);
+
+    UserScore.findOneAndUpdate({name: decoded.name}, {$set:{letterI: req.body.score}}, function(err, found){
+        if(err){
+            console.log(`This is the error form the iresults UserScore findOne ${err}`);
+
+        }
+
+        if(!found){
+            new UserScore({
+                name: decoded.name,
+                letterI: req.body.score
+
+            })
+            .save((err, newUserScore)=>{
+                if(err){
+                    console.log(`This is the err from the letterE ${err}`);
+                }
+
+                console.log(`This is the save from the findOneAndUpdate ${newUserScore} `);
+
+            })
+        }
+        console.log(`Found UserScore Model : ${found.name}`)
+        
+
+    })
+    
    
 })
 
