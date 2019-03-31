@@ -7,6 +7,7 @@ let cors = require('cors');
 let jwt = require('jsonwebtoken');
 let multer = require('multer');
 let secretToken = 'yba(youbeetaask)';
+let upload = multer({dest: '/public'});
 
 let app = express();
 
@@ -26,6 +27,10 @@ const User = mongoose.model('users', { name: String , email: String, password: S
 const UserScore = mongoose.model('user_scores', {name: String, letterU: Number, letterR:Number, letterI: Number, letterE: Number })
 
 
+//const ProfilePicture = mongoose.model('');
+
+
+
 
 //hash for the passwords brcypt 3.0.4
 
@@ -43,7 +48,9 @@ app.get('/', function(req,res){
 });
 
 app.get('/letteru', function(req,res){
-    
+ if(!req.headers.token){
+     res.send({data: false})
+ }    
 
 });
 
@@ -135,6 +142,13 @@ app.get('/dashboard', (req,res) => {
 //post requests 
 
 
+app.post('/profile', upload.single('file'), function(req,res){
+console.log(`this is the file upload keys ${req.body.data}`)
+
+
+});
+
+
 
 app.post('/register', (req,res) => {
     let name = req.body.name;
@@ -154,7 +168,7 @@ app.post('/register', (req,res) => {
 
             }
 
-        console.log(`Success form the server ${data}`)
+        console.log(`Success from the server ${data}`)
         res.send({data:data})
     })
 
