@@ -7,6 +7,7 @@ let cors = require('cors');
 let jwt = require('jsonwebtoken');
 let multer = require('multer');
 let secretToken = 'yba(youbeetaask)';
+let upload = multer({dest: '/public'});
 
 let app = express();
 
@@ -26,6 +27,10 @@ const User = mongoose.model('users', { name: String , email: String, password: S
 const UserScore = mongoose.model('user_scores', {name: String, letterU: Number, letterR:Number, letterI: Number, letterE: Number })
 
 
+//const ProfilePicture = mongoose.model('');
+
+
+
 
 //hash for the passwords brcypt 3.0.4
 
@@ -35,6 +40,23 @@ const someOtherPlaintextPassword = 'not_bacon';
 
 
 
+/*
+
+function staircase(n){
+let str = '';
+
+    for(let i = 1; i <= n; i++){
+        str += ` ${' '.repeat(n-1)} ${'#'.repeat(i)}` + '\n';
+
+    }
+    return str;
+}
+
+staircase(6)
+
+*/
+
+
 
 //get requests
 app.get('/', function(req,res){
@@ -42,8 +64,96 @@ app.get('/', function(req,res){
 
 });
 
-app.get('/letteru', function(req,res){
+app.get('/stats', function(req,res){
+UserScore.find({}, function(err, users){
+    if(err){ console.log(err);}
+    console.log(`Length ${users.length}`);
     
+    
+    let uLeader = users.reduce((prev,curr) => {
+        if(curr.letterU || prev.letterU){
+            return (prev.letterU > curr.letterU) ? prev : curr
+
+        }
+    })
+
+    let rLeader = users.reduce((prev,curr) => {
+        if(curr.letterR || curr.letterR){
+            return (prev.letterR > curr.letterR) ? prev :curr
+        }
+
+        else{
+            return false;
+        }
+        
+
+    });
+    
+    
+    
+    
+    
+    let eLeader = users.reduce((prev, curr) => {
+       if(curr.letterE || prev.letterE){
+        return prev.letterE > curr.letterE ? prev : curr
+       }
+        
+    else {
+        return false;
+    }
+       
+    })
+
+    
+
+
+    let iLeader = users.reduce((prev, curr) => {
+        if(curr.letterI || prev.letterI){
+
+            return (prev.letterI > curr.letterI) ? prev : curr
+
+        }
+
+        else{
+            return false;
+        }
+
+    })
+
+
+
+   //Math.max.apply(Math, array.map(function(o) { return o.y; }))
+   console.log(`this is the users array and the objects that are left off the return 
+    ${users} this is the U LEADER${uLeader} and this is the E LEADER ${eLeader}`);
+    res.send({uLeader: uLeader, rLeader: rLeader, eLeader: eLeader, iLeader:iLeader})
+});
+
+})
+
+/*
+
+function bang(arr){
+    let arr = [{id: 1, name: 'user1', score: 10}, 
+                {id: 2, name: 'Junior', score: 20},
+                 {id: 3, name:'Sarah', score: 25 }
+]
+
+    let ans = arr.reduce((prev,curr) => {
+        //console.log(`PREV ${curr.score} ${prev.score}`)
+         return (prev.score > curr.score) ? prev : curr
+    })
+
+
+}
+
+
+
+*/
+
+app.get('/letteru', function(req,res){
+ if(!req.headers.token){
+     res.send({data: false})
+ }    
 
 });
 
@@ -135,6 +245,13 @@ app.get('/dashboard', (req,res) => {
 //post requests 
 
 
+app.post('/profile', upload.single('file'), function(req,res){
+console.log(`this is the file upload keys ${req.body.data}`)
+
+
+});
+
+
 
 app.post('/register', (req,res) => {
     let name = req.body.name;
@@ -154,7 +271,7 @@ app.post('/register', (req,res) => {
 
             }
 
-        console.log(`Success form the server ${data}`)
+        console.log(`Success from the server ${data}`)
         res.send({data:data})
     })
 
